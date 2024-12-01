@@ -7,35 +7,72 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
+            background-color: #2e2e2e;
+            color: #fff;
             margin: 0;
             padding: 0;
         }
         .game-container {
-            background-color: #ffffff;
-            border: 2px solid #000;
-            border-radius: 10px;
-            padding: 20px;
+            background-color: #1f1f1f;
+            border: 2px solid #007acc;
+            border-radius: 15px;
+            padding: 30px;
             margin: 50px auto;
             max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
         h1, h2 {
             margin: 10px 0;
+            font-size: 2.5rem;
         }
         button {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 18px;
             cursor: pointer;
+            background-color: #4facfe;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+        button:hover {
+            background-color: #007acc;
         }
         .developer {
             margin-top: 20px;
             font-size: 14px;
             color: #555;
         }
+        input[type="text"] {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            width: 80%;
+            max-width: 350px;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
         .hidden {
             display: none;
+        }
+        .game-over {
+            color: #f0f0f0;
+            font-size: 1.5rem;
+        }
+        #timer {
+            font-size: 1.5rem;
+            color: #ff6347;
+            font-weight: bold;
+        }
+        #hint {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #d3d3d3;
         }
     </style>
 </head>
@@ -47,46 +84,57 @@
             <h3>Guess the word:</h3>
             <p id="scrambled-word"></p>
             <input type="text" id="player-guess" placeholder="Enter your guess">
-            <button onclick="submitGuess()">Submit</button>
-            <p id="feedback"></p>
+            <button onclick="submitGuess()">Submit Guess</button>
+            <button onclick="quitGame()">Quit Game</button>
+            <p id="feedback" class="feedback"></p>
+            <p id="hint" class="feedback"></p>
+            <p id="timer"></p>
         </div>
         <div id="game-over" class="hidden">
-            <h2>Game Over</h2>
+            <h2 class="game-over">Game Over</h2>
             <p>Level: <span id="final-level"></span></p>
             <p>Score: <span id="final-score"></span> out of <span id="max-score"></span></p>
-            <button onclick="restartGame()">Restart</button>
+            <button onclick="restartGame()">Restart Game</button>
         </div>
         <div class="developer">Developed by Belal Amr</div>
     </div>
 
     <script>
+        // Word list with additional hints
         let words = [
-            { word: "grow", scrambled: "g o r w" },
-            { word: "battary", scrambled: "r a t y b a t" },
-            { word: "friends", scrambled: "d e f s i r n" },
-            { word: "value", scrambled: "u l e v a" },
-            { word: "sight", scrambled: "g i s h t" },
-            { word: "tongue", scrambled: "g o u n t e" },
-            { word: "laptop", scrambled: "t a p o l p" },
-            { word: "download", scrambled: "l o w d o a n d" },
-            { word: "understand", scrambled: "s t e r a n d d n u" },
-            { word: "language", scrambled: "g n a u e l g a" },
-            { word: "program", scrambled: "r a p m o g r" },
-            { word: "python", scrambled: "t h o p y n" },
-            { word: "artificial", scrambled: "c i i t a l r f a i" },
-            { word: "computer", scrambled: "m o p t u e r c" },
-            { word: "university", scrambled: "v i s e u n t i r y" },
-            { word: "science", scrambled: "e c n e i s c" },
-            { word: "network", scrambled: "w o k r e t n" },
-            { word: "system", scrambled: "t s e y m s" },
-            { word: "internet", scrambled: "t r e i n e t n" },
-            { word: "security", scrambled: "c r t e i u s y" },
+            { word: "grow", scrambled: "g o r w", hint: "It's a verb. Starts with 'g'." },
+            { word: "battery", scrambled: "r a t y b a t", hint: "It's a noun. Contains 3 vowels." },
+            { word: "friends", scrambled: "d e f s i r n", hint: "It's a plural noun." },
+            { word: "value", scrambled: "u l e v a", hint: "It's a noun. Starts with 'v'." },
+            { word: "sight", scrambled: "g i s h t", hint: "It's a noun. It helps you see." },
+            { word: "tongue", scrambled: "g o u n t e", hint: "It's a noun. Used to taste and speak." },
+            { word: "laptop", scrambled: "t a p o l p", hint: "It's a noun. A portable computer." },
+            { word: "download", scrambled: "l o w d o a n d", hint: "It's a verb. Means to get something from the internet." },
+            { word: "understand", scrambled: "s t e r a n d d n u", hint: "It's a verb. Has 3 syllables." },
+            { word: "language", scrambled: "g n a u e l g a", hint: "It's a noun. Used for communication." },
+            { word: "program", scrambled: "r a p m o g r", hint: "It's a noun. Related to coding." },
+            { word: "python", scrambled: "t h o p y n", hint: "It's a noun. A popular programming language." },
+            { word: "artificial", scrambled: "c i i t a l r f a i", hint: "It's an adjective. Means made by humans." },
+            { word: "computer", scrambled: "m o p t u e r c", hint: "It's a noun. A machine for processing information." },
+            { word: "university", scrambled: "v i s e u n t i r y", hint: "It's a noun. A place of higher education." },
+            { word: "science", scrambled: "e c n e i s c", hint: "It's a noun. The study of the natural world." },
+            { word: "network", scrambled: "w o k r e t n", hint: "It's a noun. A system of connected devices." },
+            { word: "system", scrambled: "t s e y m s", hint: "It's a noun. A group of parts working together." },
+            { word: "internet", scrambled: "t r e i n e t n", hint: "It's a noun. The global network connecting computers." },
+            { word: "security", scrambled: "c r t e i u s y", hint: "It's a noun. Measures taken to protect from harm." },
         ];
 
+        // Game variables
         let level = 1;
         let score = 0;
-        let counter = 0;
+        let maxScore = words.length * 5;  // Each word is worth 5 points
         let currentWord = {};
+        let timerInterval;
+        let timer = 30;
+
+        // Sound Effects
+        const correctSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/2059.wav');
+        const incorrectSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/1399.wav');
 
         function startGame() {
             if (level <= words.length) {
@@ -95,23 +143,55 @@
                 document.getElementById("scrambled-word").innerText = currentWord.scrambled;
                 document.getElementById("player-guess").value = "";
                 document.getElementById("feedback").innerText = "";
+                document.getElementById("hint").innerText = currentWord.hint;
+                startTimer();
             } else {
                 endGame();
             }
         }
 
+        function startTimer() {
+            timer = 30; // Reset timer to 30 seconds
+            document.getElementById("timer").innerText = `Time: ${timer}s`;
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById("timer").innerText = `Time: ${timer}s`;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    submitGuess(); // Auto-submit if time runs out
+                }
+            }, 1000);
+        }
+
         function submitGuess() {
             let guess = document.getElementById("player-guess").value.toLowerCase();
+            clearInterval(timerInterval); // Stop the timer when a guess is submitted
+
+            if (guess === "") {
+                document.getElementById("feedback").innerText = "Please enter a guess!";
+                return;
+            }
+
             if (guess === currentWord.word) {
                 document.getElementById("feedback").innerText = "Correct guess!";
+                correctSound.play();
                 score += 5;
-                counter += 5;
-                level++;
+            } else {
+                document.getElementById("feedback").innerText = `Incorrect guess! The word was "${currentWord.word}".`;
+                incorrectSound.play();
+            }
+
+            level++;
+            if (level <= words.length) {
                 startGame();
             } else {
-                document.getElementById("feedback").innerText = "False guess! Try again.";
-                score--;
+                endGame();
             }
+        }
+
+        function quitGame() {
+            clearInterval(timerInterval); // Stop the timer
+            endGame();
         }
 
         function endGame() {
@@ -119,19 +199,18 @@
             document.getElementById("game-over").classList.remove("hidden");
             document.getElementById("final-level").innerText = level - 1;
             document.getElementById("final-score").innerText = score;
-            document.getElementById("max-score").innerText = counter;
+            document.getElementById("max-score").innerText = maxScore;
         }
 
         function restartGame() {
             level = 1;
             score = 0;
-            counter = 0;
-            document.getElementById("game").classList.remove("hidden");
             document.getElementById("game-over").classList.add("hidden");
+            document.getElementById("game").classList.remove("hidden");
             startGame();
         }
 
-        // Start the game on load
+        // Initialize the game
         startGame();
     </script>
 </body>

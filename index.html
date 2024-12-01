@@ -74,6 +74,11 @@
             margin-top: 10px;
             color: #d3d3d3;
         }
+        #score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6347;
+        }
     </style>
 </head>
 <body>
@@ -89,6 +94,7 @@
             <p id="feedback" class="feedback"></p>
             <p id="hint" class="feedback"></p>
             <p id="timer"></p>
+            <p id="score">Score: 0</p>
         </div>
         <div id="game-over" class="hidden">
             <h2 class="game-over">Game Over</h2>
@@ -133,8 +139,8 @@
         let timer = 30;
 
         // Sound Effects
-        const correctSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/2059.wav');
-        const incorrectSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/1399.wav');
+        const correctSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/1399.wav');
+        const incorrectSound = new Audio('https://bigsoundbank.com/UPLOAD/wav/2059.wav');
 
         function startGame() {
             if (level <= words.length) {
@@ -165,6 +171,8 @@
 
         function submitGuess() {
             let guess = document.getElementById("player-guess").value.toLowerCase();
+            // Remove any non-alphabet characters from the guess
+            guess = guess.replace(/[^a-z]/g, '');
             clearInterval(timerInterval); // Stop the timer when a guess is submitted
 
             if (guess === "") {
@@ -181,17 +189,20 @@
                 incorrectSound.play();
             }
 
+            document.getElementById("score").innerText = `Score: ${score}`;
+
             level++;
-            if (level <= words.length) {
-                startGame();
-            } else {
+            if (level > words.length) {
                 endGame();
+            } else {
+                startGame(); // Load the next word
             }
         }
 
         function quitGame() {
-            clearInterval(timerInterval); // Stop the timer
-            endGame();
+            if (confirm("Are you sure you want to quit the game?")) {
+                endGame();
+            }
         }
 
         function endGame() {
@@ -207,11 +218,11 @@
             score = 0;
             document.getElementById("game-over").classList.add("hidden");
             document.getElementById("game").classList.remove("hidden");
+            document.getElementById("score").innerText = `Score: ${score}`;
             startGame();
         }
 
-        // Initialize the game
-        startGame();
+        startGame(); // Start the game when the page loads
     </script>
 </body>
 </html>
